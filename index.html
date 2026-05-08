@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Barber Street Booking</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --wa-bg:#0b141a;--wa-panel:#202c33;--wa-input-bg:#2a3942;
+  --wa-bi:#202c33;--wa-bo:#005c4b;
+  --wa-green:#00a884;--wa-gl:#25d366;
+  --wa-text:#e9edef;--wa-muted:#8696a0;
+  --wa-border:#2a3942;--wa-tick:#53bdeb;
+  --br:8px;
+}
+body{font-family:'Noto Sans','Segoe UI',sans-serif;background:var(--wa-bg);display:flex;justify-content:center;align-items:center;min-height:100vh}
+.shell{width:100%;max-width:430px;height:100svh;max-height:900px;display:flex;flex-direction:column;background:var(--wa-bg);position:relative;overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,.8)}
+.shell::before{content:'';position:absolute;inset:0;opacity:.04;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q35 15 30 25 Q25 15 30 5Z M5 30 Q15 25 25 30 Q15 35 5 30Z M55 30 Q45 25 35 30 Q45 35 55 30Z M30 55 Q35 45 30 35 Q25 45 30 55Z' fill='%23fff'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+/* header */
+.hdr{background:var(--wa-panel);padding:10px 16px;display:flex;align-items:center;gap:12px;z-index:10;border-bottom:1px solid rgba(255,255,255,.05)}
+.back{color:var(--wa-text);font-size:20px;cursor:pointer}
+.av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#004d3d,#00a884);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.av svg{width:26px;height:26px}
+.hi{flex:1}
+.hn{font-size:16px;font-weight:600;color:var(--wa-text);line-height:1.2}
+.hs{font-size:12px;color:var(--wa-gl)}
+.hicons{display:flex;gap:20px;color:var(--wa-muted);font-size:18px}
+/* messages */
+.msgs{flex:1;overflow-y:auto;padding:12px 8px 8px;display:flex;flex-direction:column;gap:4px;z-index:1;scroll-behavior:smooth}
+.msgs::-webkit-scrollbar{width:4px}
+.msgs::-webkit-scrollbar-thumb{background:var(--wa-border);border-radius:4px}
+.chip{align-self:center;background:var(--wa-panel);color:var(--wa-muted);font-size:11.5px;padding:5px 10px;border-radius:8px;margin:6px 0;user-select:none}
+.bw{display:flex;flex-direction:column;max-width:80%;opacity:0;transform:translateY(10px);animation:pop .28s ease forwards}
+@keyframes pop{to{opacity:1;transform:translateY(0)}}
+.bw.in{align-self:flex-start;margin-left:4px}
+.bw.out{align-self:flex-end;margin-right:4px}
+.b{padding:7px 10px 6px;border-radius:var(--br);font-size:14px;line-height:1.45;color:var(--wa-text);position:relative;word-break:break-word}
+.in .b{background:var(--wa-bi);border-top-left-radius:2px}
+.out .b{background:var(--wa-bo);border-top-right-radius:2px}
+.in .b::before{content:'';position:absolute;top:0;left:-7px;border:7px solid transparent;border-top-color:var(--wa-bi);border-right-color:var(--wa-bi)}
+.out .b::before{content:'';position:absolute;top:0;right:-7px;border:7px solid transparent;border-top-color:var(--wa-bo);border-left-color:var(--wa-bo)}
+.bm{display:flex;align-items:center;gap:4px;margin-top:2px;font-size:11px;color:var(--wa-muted)}
+.out .bm{justify-content:flex-end}
+.tick{color:var(--wa-tick);font-size:13px}
+.b strong{color:#fff}
+.hl{color:var(--wa-gl);font-weight:600}
+/* options */
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:6px;align-self:flex-start;width:100%;max-width:78%;margin-left:4px;opacity:0;animation:pop .3s .15s ease forwards}
+.obtn{background:var(--wa-panel);border:1px solid var(--wa-green);color:var(--wa-gl);border-radius:24px;padding:9px 18px;font-size:14px;font-family:inherit;cursor:pointer;text-align:center;transition:background .15s,color .15s;font-weight:500}
+.obtn:hover,.obtn:active{background:var(--wa-green);color:#fff}
+.obtn:disabled{opacity:.4;cursor:default;border-color:var(--wa-muted);color:var(--wa-muted)}
+/* slots */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;align-self:flex-start;max-width:78%;margin-left:4px;opacity:0;animation:pop .3s .15s ease forwards}
+.sbtn{background:var(--wa-panel);border:1px solid var(--wa-border);color:var(--wa-text);border-radius:8px;padding:10px 8px;font-size:13px;font-family:inherit;cursor:pointer;text-align:center;transition:all .15s}
+.sbtn .st{font-weight:600;font-size:14px}
+.sbtn .ss{font-size:11px;color:var(--wa-gl);margin-top:2px}
+.sbtn:hover{border-color:var(--wa-green);background:rgba(0,168,132,.12)}
+.sbtn:disabled{opacity:.35;cursor:default}
+/* cards */
+.ccard{background:var(--wa-panel);border-radius:10px;padding:12px 14px;border-left:3px solid var(--wa-green);margin-top:8px;font-size:13.5px;line-height:1.85}
+.ccard .cl{color:var(--wa-muted);font-size:12px}
+.ccard .cv{color:var(--wa-text);font-weight:500}
+.scard{background:var(--wa-panel);border-radius:12px;padding:16px;text-align:center;border:1px solid var(--wa-green);margin-top:4px}
+.scard .si{font-size:32px}
+.scard .sid{font-family:monospace;font-size:18px;font-weight:700;color:var(--wa-gl);letter-spacing:1px;margin:6px 0}
+.scard .sd{font-size:13px;color:var(--wa-muted)}
+/* typing */
+.typ{align-self:flex-start;background:var(--wa-bi);border-radius:var(--br);border-top-left-radius:2px;padding:10px 14px;margin-left:4px;display:flex;gap:5px;align-items:center}
+.typ span{width:7px;height:7px;background:var(--wa-muted);border-radius:50%;animation:bounce 1.2s infinite}
+.typ span:nth-child(2){animation-delay:.2s}
+.typ span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+/* input */
+.ibar{background:var(--wa-panel);padding:8px 10px;display:flex;align-items:flex-end;gap:8px;z-index:10;border-top:1px solid rgba(255,255,255,.05)}
+.iwrap{flex:1;background:var(--wa-input-bg);border-radius:24px;display:flex;align-items:center;padding:8px 14px;gap:8px}
+.iwrap input{flex:1;background:none;border:none;outline:none;color:var(--wa-text);font-size:15px;font-family:inherit}
+.iwrap input::placeholder{color:var(--wa-muted)}
+.ibtn{color:var(--wa-muted);font-size:20px;cursor:pointer;background:none;border:none;padding:0}
+.sbnd{width:44px;height:44px;border-radius:50%;background:var(--wa-green);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;flex-shrink:0;transition:background .15s}
+.sbnd:hover{background:var(--wa-gl)}
+.rstbtn{position:absolute;top:64px;right:12px;background:rgba(32,44,51,.9);border:1px solid var(--wa-border);color:var(--wa-muted);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer;z-index:20;font-family:inherit}
+.rstbtn:hover{color:var(--wa-text)}
+@media(min-width:500px){.shell{border-radius:16px;max-height:820px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="hdr">
+    <span class="back">&#8249;</span>
+    <div class="av">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="6" cy="7" r="2.2" stroke="white" stroke-width="1.5"/>
+        <circle cx="6" cy="17" r="2.2" stroke="white" stroke-width="1.5"/>
+        <line x1="7.8" y1="8.4" x2="19" y2="4" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="7.8" y1="15.6" x2="19" y2="20" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="7.8" y1="8.4" x2="14" y2="12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="7.8" y1="15.6" x2="14" y2="12" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="hi">
+      <div class="hn">Barber Street</div>
+      <div class="hs">&#9679; online</div>
+    </div>
+    <div class="hicons"><span>&#128222;</span><span>&#8942;</span></div>
+  </div>
+  <button class="rstbtn" onclick="resetFlow()">&#8635; Restart</button>
+  <div class="msgs" id="msgs"></div>
+  <div class="ibar">
+    <div class="iwrap">
+      <button class="ibtn">&#9786;</button>
+      <input type="text" id="inp" placeholder="Message" onkeydown="if(event.key==='Enter')send()"/>
+      <button class="ibtn">&#128206;</button>
+    </div>
+    <button class="sbnd" onclick="send()">&#10148;</button>
+  </div>
+</div>
+
+<script>
+var SLOTS = {
+  Today:[
+    {t:"10:00 AM",s:2},{t:"11:30 AM",s:1},{t:"01:00 PM",s:3},
+    {t:"03:30 PM",s:1},{t:"05:00 PM",s:2},{t:"06:30 PM",s:0}
+  ],
+  Tomorrow:[
+    {t:"09:00 AM",s:3},{t:"10:30 AM",s:2},{t:"12:00 PM",s:2},
+    {t:"02:00 PM",s:1},{t:"04:30 PM",s:3},{t:"06:00 PM",s:1}
+  ]
+};
+var SVCS = [
+  {k:"Haircut",       lbl:"&#9986;&#65039; Haircut",          price:"Rs 400"},
+  {k:"Beard Trim",    lbl:"&#129492; Beard Trim",              price:"Rs 100"},
+  {k:"Haircut+Beard", lbl:"&#9986;&#65039;&#129492; Haircut + Beard", price:"Rs 450"}
+];
+
+// steps: 0=idle, 1=service, 2=date, 3=slots, 4=pre-confirm, 5=booked, 6=post-menu
+var st = {step:0, svc:'', price:'', date:'', time:'', bid:'', booking:null};
+var M = document.getElementById('msgs');
+
+function ts(){return new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}
+function genId(){return 'BS-'+Math.floor(1000+Math.random()*9000)}
+function disableBtns(){document.querySelectorAll('.obtn,.sbtn').forEach(function(b){b.disabled=true})}
+function scrl(){setTimeout(function(){M.scrollTop=M.scrollHeight},60)}
+
+function dateLabel(){
+  return new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})
+}
+function addChip(txt){
+  var e=document.createElement('div');e.className='chip';e.textContent=txt;M.appendChild(e);
+}
+
+function bubble(html, dir){
+  return new Promise(function(res){
+    var w=document.createElement('div'); w.className='bw '+(dir||'in');
+    var tick=dir==='out'?'<span class="tick">&#10003;&#10003;</span>':'';
+    w.innerHTML='<div class="b">'+html+'</div><div class="bm">'+ts()+tick+'</div>';
+    M.appendChild(w); scrl(); res();
+  });
+}
+
+function typing(ms){
+  var e=document.createElement('div');e.className='typ';
+  e.innerHTML='<span></span><span></span><span></span>';
+  M.appendChild(e);scrl();
+  return new Promise(function(r){setTimeout(function(){e.remove();r()},ms||1000)});
+}
+
+function options(list, cb){
+  var w=document.createElement('div');w.className='opts';
+  list.forEach(function(o){
+    var b=document.createElement('button');b.className='obtn';
+    b.innerHTML=o.lbl||o;
+    b.onclick=function(){disableBtns();cb(o)};
+    w.appendChild(b);
+  });
+  M.appendChild(w);scrl();
+}
+
+function slots(date, cb){
+  var data=SLOTS[date]||[];
+  var g=document.createElement('div');g.className='sgrid';
+  data.forEach(function(s){
+    var b=document.createElement('button');b.className='sbtn';b.disabled=s.s===0;
+    b.innerHTML='<div class="st">'+s.t+'</div><div class="ss">'+(s.s>0?s.s+' spot'+(s.s>1?'s':''):'Full')+'</div>';
+    b.onclick=function(){disableBtns();cb(s.t)};
+    g.appendChild(b);
+  });
+  M.appendChild(g);scrl();
+}
+
+function inCard(inner){
+  var w=document.createElement('div');w.className='bw in';
+  w.innerHTML='<div class="b">'+inner+'</div><div class="bm">'+ts()+'</div>';
+  M.appendChild(w);scrl();
+}
+
+function bookingCard(b, accent){
+  var a=accent||'var(--wa-green)';
+  return '<div class="ccard" style="border-left-color:'+a+'">'+
+    '<div><span class="cl">&#128100; Booking ID&nbsp;&nbsp;</span><span class="cv" style="color:var(--wa-gl);font-weight:700">'+b.id+'</span></div>'+
+    '<div><span class="cl">&#9986; Service&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="cv">'+b.svc+'</span></div>'+
+    '<div><span class="cl">&#128176; Amount&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="cv" style="color:var(--wa-gl);font-weight:600">'+b.price+'</span></div>'+
+    '<div><span class="cl">&#128197; Date&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="cv"'+(accent?' style="color:'+accent+';font-weight:600"':'')+'>'+b.date+'</span></div>'+
+    '<div><span class="cl">&#9200; Time&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="cv"'+(accent?' style="color:'+accent+';font-weight:600"':'')+'>'+b.time+'</span></div>'+
+    (b.status?'<div><span class="cl">&#9989; Status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="cv" style="color:var(--wa-gl)">'+b.status+'</span></div>':'')+
+    '</div>';
+}
+
+function successCard(b, icon, title, accent){
+  var a=accent||'var(--wa-green)';
+  var w=document.createElement('div');w.className='bw in';
+  w.innerHTML='<div class="b"><div class="scard" style="border-color:'+a+'">'+
+    '<div class="si">'+(icon||'&#9989;')+'</div>'+
+    '<div style="font-weight:700;font-size:15px;margin-top:6px;color:var(--wa-text)">'+(title||'Booking Confirmed!')+'</div>'+
+    '<div class="sid">'+b.id+'</div>'+
+    '<div class="sd">'+b.svc+' &middot; '+b.date+' &middot; '+b.time+'</div>'+
+    '<div style="font-size:16px;font-weight:700;color:var(--wa-gl);margin-top:6px">'+b.price+'</div>'+
+    '<div style="margin-top:10px;font-size:13px;color:var(--wa-muted)">See you soon at Barber Street &#9986;&#65039;</div>'+
+    '</div></div><div class="bm">'+ts()+'</div>';
+  M.appendChild(w);scrl();
+}
+
+// ── FLOW ──
+
+async function flowWelcome(){
+  await typing(900);
+  await bubble('Welcome to <strong>Barber Street</strong> &#9986;&#65039;<br/>Your neighbourhood barber, now bookable on WhatsApp!<br/><br/>Choose a service to get started &#128071;');
+  st.step=1;
+  showSvcOptions();
+}
+
+function showSvcOptions(){
+  options(SVCS.map(function(s){
+    return {k:s.k, lbl:s.lbl+' &nbsp;<span style="color:var(--wa-gl);font-weight:600">'+s.price+'</span>', price:s.price};
+  }), async function(o){
+    st.svc=o.k; st.price=o.price;
+    await bubble(o.lbl,'out');
+    flowDate();
+  });
+}
+
+async function flowDate(){
+  await typing(700);
+  await bubble('Great choice! <span class="hl">'+st.svc+' ('+st.price+')</span> &#128076;<br/>Which date works for you?');
+  st.step=2;
+  options([
+    {k:'Today',    lbl:'&#128197; Today'},
+    {k:'Tomorrow', lbl:'&#128197; Tomorrow'}
+  ], async function(d){
+    st.date=d.k;
+    await bubble(d.lbl,'out');
+    flowSlots();
+  });
+}
+
+async function flowSlots(){
+  await typing(1100);
+  await bubble('&#9889; Fetching slots for <span class="hl">'+st.date+'</span>...');
+  await typing(900);
+  await bubble('Available slots &#128071;<br/><span style="font-size:12px;color:var(--wa-muted)">Tap to select your time</span>');
+  st.step=3;
+  slots(st.date, async function(t){
+    st.time=t;
+    await bubble('&#9200; '+t,'out');
+    flowConfirm();
+  });
+}
+
+async function flowConfirm(){
+  await typing(800);
+  var preview={id:'---',svc:st.svc,price:st.price,date:st.date,time:st.time,status:''};
+  inCard('Please confirm your booking:'+bookingCard(preview));
+  await new Promise(function(r){setTimeout(r,300)});
+  st.step=4;
+  options([
+    {k:'confirm', lbl:'&#9989; CONFIRM'},
+    {k:'change',  lbl:'&#9999;&#65039; CHANGE'}
+  ], async function(c){
+    await bubble(c.lbl,'out');
+    if(c.k==='confirm') flowBooked();
+    else flowChange();
+  });
+}
+
+async function flowBooked(){
+  st.bid=genId();
+  st.booking={id:st.bid, svc:st.svc, price:st.price, date:st.date, time:st.time, status:'Confirmed'};
+  await typing(1400);
+  successCard(st.booking, '&#9989;', 'Booking Confirmed!', 'var(--wa-green)');
+  await typing(700);
+  await bubble('We\'ll send you a reminder before your appointment! &#128071; Type anything to manage your booking.');
+  st.step=5;
+}
+
+async function flowChange(){
+  await typing(600);
+  await bubble('No problem! Pick again &#128071;');
+  st.svc=''; st.price=''; st.date=''; st.time='';
+  st.step=1;
+  showSvcOptions();
+}
+
+// ── POST-BOOKING ──
+
+async function postMenu(){
+  await typing(700);
+  await bubble('What would you like to do? &#128071;');
+  st.step=6;
+  options([
+    {k:'check',      lbl:'&#128203; Check My Booking'},
+    {k:'reschedule', lbl:'&#128260; Reschedule'},
+    {k:'new',        lbl:'&#9986;&#65039; New Booking'}
+  ], async function(c){
+    await bubble(c.lbl,'out');
+    if(c.k==='check') postCheck();
+    else if(c.k==='reschedule') postRescheduleDate();
+    else postNew();
+  });
+}
+
+async function postCheck(){
+  await typing(800);
+  inCard('Your booking details &#128203;'+bookingCard(st.booking));
+  await new Promise(function(r){setTimeout(r,300)});
+  await typing(500);
+  await bubble('Need anything else?');
+  st.step=6;
+  options([
+    {k:'reschedule', lbl:'&#128260; Reschedule'},
+    {k:'new',        lbl:'&#9986;&#65039; New Booking'},
+    {k:'done',       lbl:'&#128076; Done'}
+  ], async function(c){
+    await bubble(c.lbl,'out');
+    if(c.k==='reschedule') postRescheduleDate();
+    else if(c.k==='new') postNew();
+    else{ await typing(400); await bubble('See you at Barber Street! &#128136;'); st.step=5; }
+  });
+}
+
+async function postRescheduleDate(){
+  await typing(800);
+  await bubble('&#128260; Let\'s find a new slot for your <span class="hl">'+st.booking.svc+'</span>.<br/>Which date?');
+  st.step=6;
+  options([
+    {k:'Today',    lbl:'&#128197; Today'},
+    {k:'Tomorrow', lbl:'&#128197; Tomorrow'}
+  ], async function(d){
+    st.date=d.k;
+    await bubble(d.lbl,'out');
+    postRescheduleSlots();
+  });
+}
+
+async function postRescheduleSlots(){
+  await typing(1000);
+  await bubble('&#9889; Fetching slots for <span class="hl">'+st.date+'</span>...');
+  await typing(900);
+  await bubble('Pick your new time &#128071;');
+  st.step=6;
+  slots(st.date, async function(t){
+    st.time=t;
+    await bubble('&#9200; '+t,'out');
+    postRescheduleConfirm();
+  });
+}
+
+async function postRescheduleConfirm(){
+  await typing(700);
+  var preview={id:st.booking.id, svc:st.booking.svc, price:st.booking.price, date:st.date, time:st.time, status:''};
+  inCard('Confirm rescheduled appointment:'+bookingCard(preview,'#f0a500'));
+  await new Promise(function(r){setTimeout(r,300)});
+  st.step=6;
+  options([
+    {k:'confirm', lbl:'&#9989; CONFIRM RESCHEDULE'},
+    {k:'cancel',  lbl:'&#10060; CANCEL'}
+  ], async function(c){
+    await bubble(c.lbl,'out');
+    if(c.k==='confirm') postRescheduleDone();
+    else{
+      await typing(400);
+      await bubble('Reschedule cancelled. Original booking still active &#128077;');
+      st.step=5;
+      await typing(400);
+      await bubble('Type anything to manage your booking.');
+    }
+  });
+}
+
+async function postRescheduleDone(){
+  st.booking.date=st.date; st.booking.time=st.time;
+  await typing(1200);
+  successCard(st.booking,'&#128260;','Rescheduled Successfully!','#f0a500');
+  st.step=5;
+  await typing(500);
+  await bubble('Type anything if you need further help &#128522;');
+}
+
+async function postNew(){
+  await typing(600);
+  var prev=st.booking;
+  await bubble('&#127381; Starting a new booking! Choose a service &#128071;');
+  st={step:1, svc:'', price:'', date:'', time:'', bid:'', booking:prev};
+  showSvcOptions();
+}
+
+// ── INPUT ──
+function send(){
+  var el=document.getElementById('inp'), v=el.value.trim();
+  if(!v) return; el.value=''; handleInput(v);
+}
+
+async function handleInput(txt){
+  if(st.step===0){
+    // No booking — start fresh
+    await bubble(txt,'out');
+    flowWelcome();
+  } else if(st.step===5){
+    // Booking exists — show management menu
+    await bubble(txt,'out');
+    postMenu();
+  } else if(st.step===4){
+    disableBtns();
+    await bubble(txt,'out');
+    var u=txt.toUpperCase();
+    if(u.includes('CONFIRM')) flowBooked();
+    else if(u.includes('CHANGE')) flowChange();
+    else{ await typing(500); await bubble('Please tap <strong>CONFIRM</strong> or <strong>CHANGE</strong> above.'); }
+  } else {
+    await bubble(txt,'out');
+    await typing(500);
+    await bubble('Please use the options above to continue &#128070;');
+  }
+}
+
+function resetFlow(){
+  M.innerHTML='';
+  st={step:0,svc:'',price:'',date:'',time:'',bid:'',booking:null};
+  addChip(dateLabel());
+}
+
+// Init
+addChip(dateLabel());
+</script>
+</body>
+</html>
